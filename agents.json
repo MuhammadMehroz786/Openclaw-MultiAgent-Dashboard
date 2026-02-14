@@ -1,0 +1,13 @@
+{
+  "port": 3000,
+  "agents": [
+    {
+      "id": "agent-1",
+      "name": "Agent 1",
+      "host": "168.231.115.119",
+      "port": 18789,
+      "token": "ba1ba00e4a2637e12402c55f573b2f0ea05123051ff63428",
+      "color": "#3B82F6"
+    }
+  ]
+}

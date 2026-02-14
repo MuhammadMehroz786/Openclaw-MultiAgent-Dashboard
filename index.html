@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-page: #0F172A;
+  --bg-surface: #1E293B;
+  --bg-surface-alt: #162032;
+  --bg-input: #0F172A;
+  --text-primary: #E2E8F0;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #CBD5E1;
+  --border: #334155;
+  --border-light: #1E293B;
+  --shadow: rgba(0,0,0,.3);
+  --shadow-heavy: rgba(0,0,0,.5);
+  --overlay: rgba(0,0,0,.7);
+  --accent: #3B82F6;
+  --accent-subtle: rgba(59,130,246,.15);
+  --success: #10B981;
+  --success-subtle: rgba(16,185,129,.15);
+  --error: #EF4444;
+  --error-subtle: rgba(239,68,68,.15);
+  --warning: #F59E0B;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg-page); color:var(--text-primary); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+/* ── Header ──────────────────────────────────────────────── */
+header { background:var(--bg-surface); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; align-items:center; gap:16px; flex-shrink:0; }
+.logo { width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg,#3B82F6,#06B6D4); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:#fff; }
+header h1 { font-size:18px; font-weight:600; color:var(--text-primary); }
+header h1 span { color:#38BDF8; }
+.header-status { margin-left:auto; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); }
+.status-dot { width:8px; height:8px; border-radius:50%; }
+.status-dot.online { background:var(--success); box-shadow:0 0 6px rgba(16,185,129,.5); }
+.status-dot.offline { background:var(--error); }
+
+/* ── Layout ──────────────────────────────────────────────── */
+.main { display:flex; flex:1; overflow:hidden; }
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.sidebar { width:260px; background:var(--bg-surface); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
+.sidebar-header { padding:16px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); border-bottom:1px solid var(--border); }
+.agent-list { flex:1; overflow-y:auto; padding:8px; }
+.agent-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; transition:background .15s; margin-bottom:2px; }
+.agent-item:hover { background:var(--bg-surface-alt); }
+.agent-item.active { background:var(--accent-subtle); border:1px solid rgba(59,130,246,.3); }
+.agent-dot { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; flex-shrink:0; }
+.agent-item-info { flex:1; min-width:0; }
+.agent-item-name { font-size:13px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.agent-item-status { font-size:11px; color:var(--text-secondary); display:flex; align-items:center; gap:4px; }
+.agent-item-status .status-dot { width:6px; height:6px; }
+.agent-item .msg-count { background:var(--accent); color:#fff; font-size:10px; font-weight:600; padding:1px 6px; border-radius:9999px; flex-shrink:0; }
+
+/* ── Chat Area ───────────────────────────────────────────── */
+.chat-area { flex:1; display:flex; flex-direction:column; }
+.chat-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; background:var(--bg-surface); flex-shrink:0; }
+.chat-header-name { font-size:15px; font-weight:600; }
+.chat-header-host { font-size:11px; color:var(--text-secondary); font-family:'Geist Mono',monospace; }
+.chat-header-actions { margin-left:auto; display:flex; gap:6px; }
+.chat-btn { background:var(--bg-surface-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:12px; color:var(--text-secondary); cursor:pointer; transition:all .15s; }
+.chat-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+.chat-messages { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; }
+.chat-welcome { margin:auto; text-align:center; color:var(--text-secondary); max-width:400px; }
+.chat-welcome h2 { font-size:20px; color:var(--text-primary); margin-bottom:8px; }
+.chat-welcome p { font-size:13px; line-height:1.6; }
+
+.msg { max-width:75%; padding:10px 14px; border-radius:14px; font-size:13px; line-height:1.6; word-break:break-word; white-space:pre-wrap; }
+.msg.user { align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
+.msg.assistant { align-self:flex-start; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-primary); border-bottom-left-radius:4px; }
+.msg.error { align-self:center; background:var(--error-subtle); color:var(--error); font-size:12px; padding:8px 16px; }
+.msg.loading { align-self:flex-start; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-secondary); }
+.msg.loading .dots::after { content:'...'; animation:dots 1.5s infinite; }
+@keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+
+/* ── Input Bar ───────────────────────────────────────────── */
+.input-bar { padding:16px 20px; border-top:1px solid var(--border); background:var(--bg-surface); display:flex; gap:10px; flex-shrink:0; }
+.input-field { flex:1; background:var(--bg-input); border:1px solid var(--border); border-radius:10px; padding:12px 16px; font-size:13px; font-family:'Inter',sans-serif; color:var(--text-primary); outline:none; resize:none; min-height:20px; max-height:140px; }
+.input-field:focus { border-color:var(--accent); }
+.input-field::placeholder { color:var(--text-secondary); }
+.send-btn { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:12px 20px; font-size:13px; font-weight:600; cursor:pointer; transition:opacity .15s; flex-shrink:0; align-self:flex-end; }
+.send-btn:hover { opacity:.9; }
+.send-btn:disabled { opacity:.3; cursor:not-allowed; }
+
+/* ── Empty State ─────────────────────────────────────────── */
+.no-agent { flex:1; display:flex; align-items:center; justify-content:center; }
+.no-agent-inner { text-align:center; color:var(--text-secondary); }
+.no-agent-inner h2 { font-size:22px; color:var(--text-primary); margin-bottom:8px; }
+.no-agent-inner p { font-size:13px; }
+
+/* ── Settings Modal ──────────────────────────────────────── */
+.modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:var(--overlay); z-index:100; display:none; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--bg-surface); border:1px solid var(--border); border-radius:14px; width:90%; max-width:440px; padding:24px; }
+.modal h3 { font-size:16px; font-weight:600; margin-bottom:16px; }
+.field { margin-bottom:14px; }
+.field label { display:block; font-size:11px; font-weight:600; color:var(--text-secondary); margin-bottom:4px; text-transform:uppercase; letter-spacing:.3px; }
+.field input { width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:6px; padding:8px 12px; font-size:13px; color:var(--text-primary); outline:none; }
+.field input:focus { border-color:var(--accent); }
+.modal-btns { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+.modal-btns button { padding:8px 16px; border-radius:6px; font-size:13px; font-weight:500; cursor:pointer; }
+.btn-cancel { background:var(--bg-surface-alt); border:1px solid var(--border); color:var(--text-primary); }
+.btn-save { background:var(--accent); border:none; color:#fff; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width:768px) {
+  .sidebar { width:70px; }
+  .sidebar-header { display:none; }
+  .agent-item-info { display:none; }
+  .agent-item .msg-count { display:none; }
+  .agent-item { justify-content:center; padding:10px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">O</div>
+  <h1><span>OpenClaw</span> Dashboard</h1>
+  <div class="header-status" id="header-status"></div>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-header">Agents</div>
+    <div class="agent-list" id="agent-list"></div>
+  </div>
+
+  <div class="chat-area" id="chat-area">
+    <div class="no-agent" id="no-agent">
+      <div class="no-agent-inner">
+        <h2>OpenClaw Dashboard</h2>
+        <p>Select an agent from the sidebar to start chatting.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3>Rename Agent</h3>
+    <input type="hidden" id="modal-id">
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="modal-name" placeholder="Agent name">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let agents = [];
+let activeId = null;
+
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Load Agents ──
+async function loadAgents() {
+  try {
+    agents = await (await fetch('/api/agents')).json();
+    renderSidebar();
+    updateHeaderStatus();
+  } catch {
+    document.getElementById('agent-list').innerHTML = '<div style="padding:16px;color:var(--text-secondary);font-size:12px">Failed to load agents</div>';
+  }
+}
+
+function updateHeaderStatus() {
+  const online = agents.filter(a => a.online).length;
+  const total = agents.length;
+  const el = document.getElementById('header-status');
+  el.innerHTML = `<span class="status-dot ${online > 0 ? 'online' : 'offline'}"></span> ${online}/${total} online`;
+}
+
+function renderSidebar() {
+  const list = document.getElementById('agent-list');
+  list.innerHTML = agents.map(a => `
+    <div class="agent-item ${a.id === activeId ? 'active' : ''}" onclick="selectAgent('${a.id}')">
+      <div class="agent-dot" style="background:${a.color}">${esc(a.name.charAt(0).toUpperCase())}</div>
+      <div class="agent-item-info">
+        <div class="agent-item-name">${esc(a.name)}</div>
+        <div class="agent-item-status">
+          <span class="status-dot ${a.online ? 'online' : 'offline'}"></span>
+          ${a.online ? 'Online' : 'Offline'}
+        </div>
+      </div>
+      ${a.messageCount > 0 ? `<span class="msg-count">${a.messageCount}</span>` : ''}
+    </div>
+  `).join('');
+}
+
+// ── Select Agent ──
+async function selectAgent(id) {
+  activeId = id;
+  const agent = agents.find(a => a.id === id);
+  if (!agent) return;
+
+  renderSidebar();
+
+  const area = document.getElementById('chat-area');
+  area.innerHTML = `
+    <div class="chat-header">
+      <div class="agent-dot" style="background:${agent.color};width:32px;height:32px;font-size:14px">${esc(agent.name.charAt(0).toUpperCase())}</div>
+      <div>
+        <div class="chat-header-name">${esc(agent.name)}</div>
+        <div class="chat-header-host">${esc(agent.host)}:${agent.port || 18789}</div>
+      </div>
+      <div class="chat-header-actions">
+        <button class="chat-btn" onclick="openModal('${agent.id}')">Rename</button>
+        <button class="chat-btn" onclick="clearChat('${agent.id}')">Clear</button>
+      </div>
+    </div>
+    <div class="chat-messages" id="messages">
+      <div class="chat-welcome">
+        <h2>${esc(agent.name)}</h2>
+        <p>${agent.online ? 'Connected to OpenClaw Gateway. Send a message to start.' : 'Agent is offline. Check VPS connection.'}</p>
+      </div>
+    </div>
+    <div class="input-bar">
+      <textarea class="input-field" id="input" placeholder="Message ${esc(agent.name)}..." rows="1" onkeydown="handleKey(event)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+  `;
+
+  // Load existing conversation
+  try {
+    const data = await (await fetch(`/api/agents/${id}/conversation`)).json();
+    if (data.messages && data.messages.length > 0) {
+      const msgs = document.getElementById('messages');
+      msgs.innerHTML = data.messages.map(m => `<div class="msg ${m.role}">${esc(m.content)}</div>`).join('');
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+  } catch {}
+
+  document.getElementById('input').focus();
+}
+
+// ── Chat ──
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('input');
+  const btn = document.getElementById('send-btn');
+  const msgs = document.getElementById('messages');
+  const message = input.value.trim();
+  if (!message || !activeId) return;
+
+  // Clear welcome
+  const welcome = msgs.querySelector('.chat-welcome');
+  if (welcome) welcome.remove();
+
+  // User message
+  const userEl = document.createElement('div');
+  userEl.className = 'msg user';
+  userEl.textContent = message;
+  msgs.appendChild(userEl);
+
+  // Loading
+  const loadEl = document.createElement('div');
+  loadEl.className = 'msg loading';
+  loadEl.innerHTML = 'Thinking<span class="dots"></span>';
+  msgs.appendChild(loadEl);
+
+  input.value = '';
+  btn.disabled = true;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    const res = await fetch(`/api/agents/${activeId}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    const data = await res.json();
+    loadEl.remove();
+
+    if (data.error) {
+      const errEl = document.createElement('div');
+      errEl.className = 'msg error';
+      errEl.textContent = data.error;
+      msgs.appendChild(errEl);
+    } else {
+      const aEl = document.createElement('div');
+      aEl.className = 'msg assistant';
+      aEl.textContent = data.response;
+      msgs.appendChild(aEl);
+    }
+  } catch {
+    loadEl.remove();
+    const errEl = document.createElement('div');
+    errEl.className = 'msg error';
+    errEl.textContent = 'Failed to reach agent';
+    msgs.appendChild(errEl);
+  }
+
+  btn.disabled = false;
+  msgs.scrollTop = msgs.scrollHeight;
+  input.focus();
+
+  // Update sidebar count
+  const agent = agents.find(a => a.id === activeId);
+  if (agent) agent.messageCount = (agent.messageCount || 0) + 2;
+  renderSidebar();
+}
+
+async function clearChat(id) {
+  await fetch(`/api/agents/${id}/clear`, { method: 'POST' });
+  const agent = agents.find(a => a.id === id);
+  if (agent) agent.messageCount = 0;
+  selectAgent(id);
+}
+
+// ── Modal ──
+function openModal(id) {
+  const agent = agents.find(a => a.id === id);
+  if (!agent) return;
+  document.getElementById('modal-id').value = id;
+  document.getElementById('modal-name').value = agent.name;
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modal-name').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+async function saveModal() {
+  const id = document.getElementById('modal-id').value;
+  const name = document.getElementById('modal-name').value.trim();
+  if (!name) return;
+
+  await fetch(`/api/agents/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+
+  closeModal();
+  await loadAgents();
+  if (activeId === id) selectAgent(id);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Init ──
+loadAgents();
+setInterval(loadAgents, 30000);
+</script>
+</body>
+</html>
