@@ -1,366 +1,650 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenClaw Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg-page: #0F172A;
-  --bg-surface: #1E293B;
-  --bg-surface-alt: #162032;
-  --bg-input: #0F172A;
-  --text-primary: #E2E8F0;
-  --text-secondary: #94A3B8;
-  --text-tertiary: #CBD5E1;
-  --border: #334155;
-  --border-light: #1E293B;
-  --shadow: rgba(0,0,0,.3);
-  --shadow-heavy: rgba(0,0,0,.5);
-  --overlay: rgba(0,0,0,.7);
-  --accent: #3B82F6;
-  --accent-subtle: rgba(59,130,246,.15);
-  --success: #10B981;
-  --success-subtle: rgba(16,185,129,.15);
-  --error: #EF4444;
-  --error-subtle: rgba(239,68,68,.15);
-  --warning: #F59E0B;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Dashboard</title>
 
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg-page); color:var(--text-primary); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-/* ── Header ──────────────────────────────────────────────── */
-header { background:var(--bg-surface); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; align-items:center; gap:16px; flex-shrink:0; }
-.logo { width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg,#3B82F6,#06B6D4); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:#fff; }
-header h1 { font-size:18px; font-weight:600; color:var(--text-primary); }
-header h1 span { color:#38BDF8; }
-.header-status { margin-left:auto; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); }
-.status-dot { width:8px; height:8px; border-radius:50%; }
-.status-dot.online { background:var(--success); box-shadow:0 0 6px rgba(16,185,129,.5); }
-.status-dot.offline { background:var(--error); }
+    <style>
+        :root {
+            --bg-body: #0F172A;
+            --bg-surface: #1E293B;
+            --bg-surface-hover: #334155;
+            --border-color: #334155;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --accent-primary: #3B82F6;
+            --accent-secondary: #06B6D4;
+            --status-online: #10B981;
+            --user-bubble-bg: #3B82F6;
+            --logo-grad-1: #3B82F6;
+            --logo-grad-2: #06B6D4;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --radius-md: 8px;
+            --radius-lg: 14px;
+            --radius-full: 9999px;
+        }
 
-/* ── Layout ──────────────────────────────────────────────── */
-.main { display:flex; flex:1; overflow:hidden; }
+        [data-theme="midnight"] {
+            --bg-body: #13111C; --bg-surface: #1C1A2E; --bg-surface-hover: #2D2B45; --border-color: #2D2B45;
+            --accent-primary: #8B5CF6; --accent-secondary: #A78BFA; --status-online: #34D399;
+            --user-bubble-bg: linear-gradient(135deg, #7C3AED, #6D28D9);
+            --logo-grad-1: #8B5CF6; --logo-grad-2: #EC4899;
+        }
+        [data-theme="carbon"] {
+            --bg-body: #09090B; --bg-surface: #18181B; --bg-surface-hover: #27272A; --border-color: #27272A;
+            --accent-primary: #F97316; --accent-secondary: #FB923C; --status-online: #22C55E;
+            --user-bubble-bg: #F97316;
+            --logo-grad-1: #F97316; --logo-grad-2: #FACC15;
+        }
+        [data-theme="ocean"] {
+            --bg-body: #0A1628; --bg-surface: #132237; --bg-surface-hover: #1E3A5F; --border-color: #1E3A5F;
+            --accent-primary: #06B6D4; --accent-secondary: #22D3EE; --status-online: #10B981;
+            --user-bubble-bg: linear-gradient(135deg, #0891B2, #06B6D4);
+            --logo-grad-1: #06B6D4; --logo-grad-2: #14B8A6;
+        }
+        [data-theme="emerald"] {
+            --bg-body: #0A1410; --bg-surface: #132A1F; --bg-surface-hover: #1A3D2C; --border-color: #1A3D2C;
+            --accent-primary: #10B981; --accent-secondary: #34D399; --status-online: #38BDF8;
+            --user-bubble-bg: linear-gradient(135deg, #059669, #10B981);
+            --logo-grad-1: #10B981; --logo-grad-2: #84CC16;
+        }
 
-/* ── Sidebar ─────────────────────────────────────────────── */
-.sidebar { width:260px; background:var(--bg-surface); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
-.sidebar-header { padding:16px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); border-bottom:1px solid var(--border); }
-.agent-list { flex:1; overflow-y:auto; padding:8px; }
-.agent-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; transition:background .15s; margin-bottom:2px; }
-.agent-item:hover { background:var(--bg-surface-alt); }
-.agent-item.active { background:var(--accent-subtle); border:1px solid rgba(59,130,246,.3); }
-.agent-dot { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; flex-shrink:0; }
-.agent-item-info { flex:1; min-width:0; }
-.agent-item-name { font-size:13px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.agent-item-status { font-size:11px; color:var(--text-secondary); display:flex; align-items:center; gap:4px; }
-.agent-item-status .status-dot { width:6px; height:6px; }
-.agent-item .msg-count { background:var(--accent); color:#fff; font-size:10px; font-weight:600; padding:1px 6px; border-radius:9999px; flex-shrink:0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; transition: background-color 0.3s, color 0.3s; }
 
-/* ── Chat Area ───────────────────────────────────────────── */
-.chat-area { flex:1; display:flex; flex-direction:column; }
-.chat-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; background:var(--bg-surface); flex-shrink:0; }
-.chat-header-name { font-size:15px; font-weight:600; }
-.chat-header-host { font-size:11px; color:var(--text-secondary); font-family:'Geist Mono',monospace; }
-.chat-header-actions { margin-left:auto; display:flex; gap:6px; }
-.chat-btn { background:var(--bg-surface-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:12px; color:var(--text-secondary); cursor:pointer; transition:all .15s; }
-.chat-btn:hover { border-color:var(--accent); color:var(--accent); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: var(--radius-full); }
 
-.chat-messages { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; }
-.chat-welcome { margin:auto; text-align:center; color:var(--text-secondary); max-width:400px; }
-.chat-welcome h2 { font-size:20px; color:var(--text-primary); margin-bottom:8px; }
-.chat-welcome p { font-size:13px; line-height:1.6; }
+        /* ── Login Screen ────────────────────────────────────── */
+        .login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-body);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s, transform 0.5s;
+        }
+        .login-screen.hidden {
+            opacity: 0; transform: scale(1.05); pointer-events: none;
+        }
+        .login-box {
+            text-align: center; width: 100%; max-width: 400px; padding: 40px;
+        }
+        .login-logo {
+            width: 64px; height: 64px; border-radius: 16px;
+            background: linear-gradient(135deg, var(--logo-grad-1), var(--logo-grad-2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; font-weight: 700; color: #fff;
+            margin: 0 auto 24px;
+            box-shadow: 0 0 40px rgba(59,130,246,0.3);
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%, 100% { box-shadow: 0 0 40px rgba(59,130,246,0.2); }
+            50% { box-shadow: 0 0 60px rgba(59,130,246,0.4); }
+        }
+        .typewriter-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px; color: var(--text-secondary);
+            margin-bottom: 32px; height: 20px;
+        }
+        .typewriter-text .cursor {
+            display: inline-block; width: 2px; height: 16px;
+            background: var(--accent-primary);
+            margin-left: 2px; vertical-align: text-bottom;
+            animation: blink 0.8s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-.msg { max-width:75%; padding:10px 14px; border-radius:14px; font-size:13px; line-height:1.6; word-break:break-word; white-space:pre-wrap; }
-.msg.user { align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
-.msg.assistant { align-self:flex-start; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-primary); border-bottom-left-radius:4px; }
-.msg.error { align-self:center; background:var(--error-subtle); color:var(--error); font-size:12px; padding:8px 16px; }
-.msg.loading { align-self:flex-start; background:var(--bg-surface); border:1px solid var(--border); color:var(--text-secondary); }
-.msg.loading .dots::after { content:'...'; animation:dots 1.5s infinite; }
-@keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+        .login-input-wrap {
+            position: relative; margin-bottom: 16px;
+        }
+        .login-input {
+            width: 100%; padding: 14px 18px;
+            background: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace; font-size: 16px;
+            outline: none; text-align: center; letter-spacing: 4px;
+            transition: border-color 0.2s;
+        }
+        .login-input:focus { border-color: var(--accent-primary); }
+        .login-input::placeholder { letter-spacing: 0; color: var(--text-secondary); font-size: 14px; }
 
-/* ── Input Bar ───────────────────────────────────────────── */
-.input-bar { padding:16px 20px; border-top:1px solid var(--border); background:var(--bg-surface); display:flex; gap:10px; flex-shrink:0; }
-.input-field { flex:1; background:var(--bg-input); border:1px solid var(--border); border-radius:10px; padding:12px 16px; font-size:13px; font-family:'Inter',sans-serif; color:var(--text-primary); outline:none; resize:none; min-height:20px; max-height:140px; }
-.input-field:focus { border-color:var(--accent); }
-.input-field::placeholder { color:var(--text-secondary); }
-.send-btn { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:12px 20px; font-size:13px; font-weight:600; cursor:pointer; transition:opacity .15s; flex-shrink:0; align-self:flex-end; }
-.send-btn:hover { opacity:.9; }
-.send-btn:disabled { opacity:.3; cursor:not-allowed; }
+        .login-btn {
+            width: 100%; padding: 14px;
+            background: var(--accent-primary); color: #fff; border: none;
+            border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: filter 0.2s;
+        }
+        .login-btn:hover { filter: brightness(110%); }
 
-/* ── Empty State ─────────────────────────────────────────── */
-.no-agent { flex:1; display:flex; align-items:center; justify-content:center; }
-.no-agent-inner { text-align:center; color:var(--text-secondary); }
-.no-agent-inner h2 { font-size:22px; color:var(--text-primary); margin-bottom:8px; }
-.no-agent-inner p { font-size:13px; }
+        .login-error {
+            color: #EF4444; font-size: 12px; margin-top: 12px;
+            opacity: 0; transition: opacity 0.2s;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .login-error.show { opacity: 1; }
 
-/* ── Settings Modal ──────────────────────────────────────── */
-.modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:var(--overlay); z-index:100; display:none; align-items:center; justify-content:center; }
-.modal-overlay.open { display:flex; }
-.modal { background:var(--bg-surface); border:1px solid var(--border); border-radius:14px; width:90%; max-width:440px; padding:24px; }
-.modal h3 { font-size:16px; font-weight:600; margin-bottom:16px; }
-.field { margin-bottom:14px; }
-.field label { display:block; font-size:11px; font-weight:600; color:var(--text-secondary); margin-bottom:4px; text-transform:uppercase; letter-spacing:.3px; }
-.field input { width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:6px; padding:8px 12px; font-size:13px; color:var(--text-primary); outline:none; }
-.field input:focus { border-color:var(--accent); }
-.modal-btns { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
-.modal-btns button { padding:8px 16px; border-radius:6px; font-size:13px; font-weight:500; cursor:pointer; }
-.btn-cancel { background:var(--bg-surface-alt); border:1px solid var(--border); color:var(--text-primary); }
-.btn-save { background:var(--accent); border:none; color:#fff; }
+        .login-hint {
+            font-size: 11px; color: var(--text-secondary);
+            margin-top: 24px; opacity: 0.5;
+        }
 
-/* ── Responsive ──────────────────────────────────────────── */
-@media (max-width:768px) {
-  .sidebar { width:70px; }
-  .sidebar-header { display:none; }
-  .agent-item-info { display:none; }
-  .agent-item .msg-count { display:none; }
-  .agent-item { justify-content:center; padding:10px; }
-}
-</style>
+        /* ── App (hidden until login) ────────────────────────── */
+        .app-wrap {
+            display: none; width: 100%; height: 100%;
+        }
+        .app-wrap.visible { display: flex; }
+
+        /* ── Sidebar ─────────────────────────────────────────── */
+        .sidebar {
+            width: var(--sidebar-width); background-color: var(--bg-body);
+            border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column;
+            transition: width 0.3s ease, background-color 0.3s, border-color 0.3s;
+            z-index: 10;
+        }
+        .logo-area {
+            height: var(--header-height); display: flex; align-items: center;
+            padding: 0 20px; border-bottom: 1px solid var(--border-color);
+        }
+        .logo-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: linear-gradient(135deg, var(--logo-grad-1), var(--logo-grad-2));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px; margin-right: 12px; flex-shrink: 0;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        .logo-text { font-weight: 600; font-size: 16px; white-space: nowrap; }
+
+        .agent-list { flex: 1; overflow-y: auto; padding: 16px 12px; list-style: none; }
+        .agent-item {
+            display: flex; align-items: center; padding: 12px; margin-bottom: 4px;
+            border-radius: var(--radius-md); cursor: pointer; transition: background-color 0.2s; position: relative;
+        }
+        .agent-item:hover { background-color: rgba(255,255,255,0.05); }
+        .agent-item.active { background-color: var(--bg-surface); border: 1px solid var(--border-color); }
+
+        .avatar {
+            width: 40px; height: 40px; border-radius: var(--radius-full);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 14px; margin-right: 12px;
+            position: relative; flex-shrink: 0;
+            background-color: var(--bg-surface); border: 1px solid var(--border-color);
+        }
+        .status-dot {
+            width: 10px; height: 10px; border: 2px solid var(--bg-body);
+            border-radius: 50%; position: absolute; bottom: 0; right: 0;
+        }
+        .status-dot.online { background-color: var(--status-online); box-shadow: 0 0 8px rgba(0,0,0,0.3); }
+        .status-dot.offline { background-color: var(--bg-surface-hover); }
+
+        .agent-info { flex: 1; min-width: 0; }
+        .agent-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .agent-status-text { font-size: 12px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; }
+        .badge {
+            background-color: var(--accent-primary); color: white;
+            font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; margin-left: 8px;
+        }
+
+        .sidebar-footer { padding: 20px; border-top: 1px solid var(--border-color); background-color: var(--bg-body); }
+        .theme-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600; }
+        .theme-options { display: flex; gap: 10px; flex-wrap: wrap; }
+        .theme-btn {
+            width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent;
+            cursor: pointer; transition: transform 0.2s, border-color 0.2s;
+        }
+        .theme-btn:hover { transform: scale(1.1); }
+        .theme-btn.active { border-color: var(--text-primary); transform: scale(1.1); }
+
+        /* ── Main Chat ───────────────────────────────────────── */
+        .main-content { flex: 1; display: flex; flex-direction: column; background-color: var(--bg-body); transition: background-color 0.3s; }
+        .chat-header {
+            height: var(--header-height); background-color: var(--bg-body);
+            border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 24px;
+        }
+        .header-info h2 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .host-badge {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            background-color: var(--bg-surface); padding: 2px 6px; border-radius: 4px;
+            color: var(--text-secondary); border: 1px solid var(--border-color);
+        }
+        .header-actions { display: flex; gap: 8px; }
+        .btn {
+            background-color: var(--bg-surface); border: 1px solid var(--border-color);
+            color: var(--text-secondary); padding: 8px 14px; border-radius: 6px;
+            font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+        }
+        .btn:hover { background-color: var(--bg-surface-hover); color: var(--text-primary); }
+        .btn-primary { background-color: var(--accent-primary); border-color: var(--accent-primary); color: white; }
+        .btn-primary:hover { filter: brightness(110%); }
+
+        .messages-area {
+            flex: 1; padding: 24px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .message { max-width: 70%; display: flex; flex-direction: column; animation: fadeIn 0.3s ease-out; }
+        .message.assistant { align-self: flex-start; }
+        .message.user { align-self: flex-end; align-items: flex-end; }
+        .msg-bubble {
+            padding: 12px 16px; border-radius: var(--radius-lg);
+            font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+        }
+        .message.assistant .msg-bubble {
+            background-color: var(--bg-surface); border: 1px solid var(--border-color); border-top-left-radius: 2px;
+        }
+        .message.user .msg-bubble {
+            background: var(--user-bubble-bg); color: white; border-top-right-radius: 2px;
+        }
+        .msg-time { font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
+        .message.user .msg-time { margin-right: 4px; }
+        .message.error .msg-bubble { background: rgba(239,68,68,0.15); color: #EF4444; text-align: center; font-size: 12px; }
+
+        .msg-bubble pre {
+            background-color: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;
+            margin-top: 8px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px;
+        }
+
+        .input-area { padding: 20px 24px; background-color: var(--bg-body); border-top: 1px solid var(--border-color); }
+        .input-wrapper {
+            display: flex; gap: 12px; background-color: var(--bg-surface);
+            border: 1px solid var(--border-color); padding: 8px; border-radius: var(--radius-md);
+            transition: border-color 0.2s;
+        }
+        .input-wrapper:focus-within { border-color: var(--accent-primary); }
+        textarea {
+            flex: 1; background: transparent; border: none; color: var(--text-primary);
+            resize: none; height: 40px; padding: 8px; font-family: 'Inter', sans-serif;
+            font-size: 14px; outline: none;
+        }
+        .send-btn {
+            background-color: var(--accent-primary); color: white; border: none;
+            width: 40px; height: 40px; border-radius: 6px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: filter 0.2s;
+        }
+        .send-btn:hover { filter: brightness(110%); }
+        .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .send-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+        .typing-indicator {
+            display: none; gap: 4px; padding: 12px 16px;
+            background-color: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); border-top-left-radius: 2px;
+            width: fit-content; margin-left: 24px; margin-bottom: 10px;
+            opacity: 0; transform: translateY(10px); transition: opacity 0.3s, transform 0.3s;
+        }
+        .typing-indicator.visible { display: flex; opacity: 1; transform: translateY(0); }
+        .dot { width: 6px; height: 6px; background-color: var(--text-secondary); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Welcome state ───────────────────────────────────── */
+        .welcome-state { margin: auto; text-align: center; color: var(--text-secondary); }
+        .welcome-state h2 { font-size: 20px; color: var(--text-primary); margin-bottom: 8px; }
+        .welcome-state p { font-size: 13px; line-height: 1.6; }
+
+        /* ── Modal ───────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center;
+            z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal { background: var(--bg-surface); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--radius-lg); width: 300px; }
+        .modal h3 { margin-bottom: 16px; font-size: 18px; }
+        .modal input {
+            width: 100%; padding: 10px; background: var(--bg-body); border: 1px solid var(--border-color);
+            color: var(--text-primary); border-radius: 6px; margin-bottom: 16px; outline: none;
+        }
+        .modal input:focus { border-color: var(--accent-primary); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+        /* ── Responsive ──────────────────────────────────────── */
+        @media (max-width: 768px) {
+            :root { --sidebar-width: 70px; }
+            .logo-text, .agent-info, .badge, .host-badge, .sidebar-footer .theme-label { display: none; }
+            .logo-area { padding: 0; justify-content: center; }
+            .logo-icon { margin: 0; }
+            .agent-item { justify-content: center; padding: 12px 0; }
+            .avatar { margin: 0; }
+            .chat-header { padding: 0 16px; }
+            .header-info h2 { font-size: 14px; }
+            .sidebar-footer { padding: 12px; display: flex; justify-content: center; }
+            .theme-options { justify-content: center; gap: 6px; }
+            .theme-btn { width: 16px; height: 16px; }
+        }
+    </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">O</div>
-  <h1><span>OpenClaw</span> Dashboard</h1>
-  <div class="header-status" id="header-status"></div>
-</header>
-
-<div class="main">
-  <div class="sidebar">
-    <div class="sidebar-header">Agents</div>
-    <div class="agent-list" id="agent-list"></div>
-  </div>
-
-  <div class="chat-area" id="chat-area">
-    <div class="no-agent" id="no-agent">
-      <div class="no-agent-inner">
-        <h2>OpenClaw Dashboard</h2>
-        <p>Select an agent from the sidebar to start chatting.</p>
-      </div>
+<!-- ── Login Screen ──────────────────────────────────────── -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-box">
+        <div class="login-logo">O</div>
+        <div class="typewriter-text" id="typewriterText"><span class="cursor"></span></div>
+        <div class="login-input-wrap">
+            <input type="password" class="login-input" id="loginInput" placeholder="Enter password" autocomplete="off" autofocus>
+        </div>
+        <button class="login-btn" id="loginBtn" onclick="attemptLogin()">Access Dashboard</button>
+        <div class="login-error" id="loginError">Access denied. Invalid credentials.</div>
+        <div class="login-hint">OpenClaw Multi-Agent Dashboard v1.0</div>
     </div>
-  </div>
 </div>
 
-<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
-    <h3>Rename Agent</h3>
-    <input type="hidden" id="modal-id">
-    <div class="field">
-      <label>Name</label>
-      <input type="text" id="modal-name" placeholder="Agent name">
+<!-- ── App ────────────────────────────────────────────────── -->
+<div class="app-wrap" id="appWrap">
+    <aside class="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon">O</div>
+            <span class="logo-text">OpenClaw</span>
+        </div>
+        <ul class="agent-list" id="agentList"></ul>
+        <div class="sidebar-footer">
+            <div class="theme-label">Theme</div>
+            <div class="theme-options">
+                <button class="theme-btn active" onclick="setTheme('')" style="background:#3B82F6" title="Classic"></button>
+                <button class="theme-btn" onclick="setTheme('midnight')" style="background:#8B5CF6" title="Midnight Purple"></button>
+                <button class="theme-btn" onclick="setTheme('carbon')" style="background:#F97316" title="Carbon Black"></button>
+                <button class="theme-btn" onclick="setTheme('ocean')" style="background:#06B6D4" title="Ocean Deep"></button>
+                <button class="theme-btn" onclick="setTheme('emerald')" style="background:#10B981" title="Emerald Dark"></button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="chat-header">
+            <div class="header-info" id="headerInfo"><h2>Select an Agent</h2></div>
+            <div class="header-actions" id="headerActions" style="display:none">
+                <button class="btn" onclick="openRenameModal()">Rename</button>
+                <button class="btn" onclick="clearChat()">Clear</button>
+            </div>
+        </header>
+        <div class="messages-area" id="messagesArea">
+            <div class="welcome-state">
+                <h2>OpenClaw Dashboard</h2>
+                <p>Select an agent from the sidebar to start chatting.</p>
+            </div>
+        </div>
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <footer class="input-area">
+            <div class="input-wrapper">
+                <textarea id="chatInput" placeholder="Type a message..." rows="1"></textarea>
+                <button class="send-btn" id="sendBtn">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                </button>
+            </div>
+        </footer>
+    </main>
+</div>
+
+<!-- ── Rename Modal ───────────────────────────────────────── -->
+<div class="modal-overlay" id="renameModal" onclick="if(event.target===this)closeRenameModal()">
+    <div class="modal">
+        <h3>Rename Agent</h3>
+        <input type="text" id="renameInput" placeholder="New name">
+        <div class="modal-actions">
+            <button class="btn" onclick="closeRenameModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmRename()">Save</button>
+        </div>
     </div>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="saveModal()">Save</button>
-    </div>
-  </div>
 </div>
 
 <script>
+// ── CONFIG ──────────────────────────────────────────────────
+const PASSWORD = 'Kasim';
+
+// ── LOGIN ───────────────────────────────────────────────────
+const typewriterPhrases = [
+    'Initializing secure connection...',
+    'OpenClaw Multi-Agent System',
+    'Authentication required.',
+];
+let phraseIdx = 0, charIdx = 0, isDeleting = false;
+
+function typewrite() {
+    const el = document.getElementById('typewriterText');
+    const phrase = typewriterPhrases[phraseIdx];
+
+    if (!isDeleting) {
+        el.innerHTML = phrase.substring(0, charIdx + 1) + '<span class="cursor"></span>';
+        charIdx++;
+        if (charIdx === phrase.length) {
+            setTimeout(() => { isDeleting = true; typewrite(); }, 2000);
+            return;
+        }
+        setTimeout(typewrite, 60 + Math.random() * 40);
+    } else {
+        el.innerHTML = phrase.substring(0, charIdx) + '<span class="cursor"></span>';
+        charIdx--;
+        if (charIdx < 0) {
+            isDeleting = false;
+            charIdx = 0;
+            phraseIdx = (phraseIdx + 1) % typewriterPhrases.length;
+            setTimeout(typewrite, 500);
+            return;
+        }
+        setTimeout(typewrite, 30);
+    }
+}
+
+function attemptLogin() {
+    const input = document.getElementById('loginInput');
+    const err = document.getElementById('loginError');
+    if (input.value === PASSWORD) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('appWrap').classList.add('visible');
+        sessionStorage.setItem('oc-auth', '1');
+        loadAgents();
+    } else {
+        err.classList.add('show');
+        input.value = '';
+        input.focus();
+        setTimeout(() => err.classList.remove('show'), 2000);
+    }
+}
+
+document.getElementById('loginInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') attemptLogin();
+});
+
+// Auto-login if already authenticated this session
+if (sessionStorage.getItem('oc-auth') === '1') {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appWrap').classList.add('visible');
+}
+
+setTimeout(typewrite, 500);
+
+// ── THEME ───────────────────────────────────────────────────
+function setTheme(name) {
+    if (name) document.body.setAttribute('data-theme', name);
+    else document.body.removeAttribute('data-theme');
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${name}'`));
+    });
+    localStorage.setItem('oc-theme', name);
+}
+
+const savedTheme = localStorage.getItem('oc-theme');
+if (savedTheme) setTheme(savedTheme);
+
+// ── STATE ───────────────────────────────────────────────────
 let agents = [];
 let activeId = null;
 
 function esc(s) {
-  if (!s) return '';
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    if (!s) return '';
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
 }
 
-// ── Load Agents ──
+function getTime() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// ── AGENTS ──────────────────────────────────────────────────
 async function loadAgents() {
-  try {
-    agents = await (await fetch('/api/agents')).json();
-    renderSidebar();
-    updateHeaderStatus();
-  } catch {
-    document.getElementById('agent-list').innerHTML = '<div style="padding:16px;color:var(--text-secondary);font-size:12px">Failed to load agents</div>';
-  }
-}
-
-function updateHeaderStatus() {
-  const online = agents.filter(a => a.online).length;
-  const total = agents.length;
-  const el = document.getElementById('header-status');
-  el.innerHTML = `<span class="status-dot ${online > 0 ? 'online' : 'offline'}"></span> ${online}/${total} online`;
+    try {
+        agents = await (await fetch('/api/agents')).json();
+        renderSidebar();
+    } catch {
+        document.getElementById('agentList').innerHTML = '<li style="padding:16px;color:var(--text-secondary);font-size:12px">Failed to load agents</li>';
+    }
 }
 
 function renderSidebar() {
-  const list = document.getElementById('agent-list');
-  list.innerHTML = agents.map(a => `
-    <div class="agent-item ${a.id === activeId ? 'active' : ''}" onclick="selectAgent('${a.id}')">
-      <div class="agent-dot" style="background:${a.color}">${esc(a.name.charAt(0).toUpperCase())}</div>
-      <div class="agent-item-info">
-        <div class="agent-item-name">${esc(a.name)}</div>
-        <div class="agent-item-status">
-          <span class="status-dot ${a.online ? 'online' : 'offline'}"></span>
-          ${a.online ? 'Online' : 'Offline'}
-        </div>
-      </div>
-      ${a.messageCount > 0 ? `<span class="msg-count">${a.messageCount}</span>` : ''}
-    </div>
-  `).join('');
+    const list = document.getElementById('agentList');
+    list.innerHTML = agents.map(a => `
+        <li class="agent-item ${a.id === activeId ? 'active' : ''}" onclick="selectAgent('${a.id}')">
+            <div class="avatar" style="color:${a.color}">
+                ${esc(a.name.substring(0,2).toUpperCase())}
+                <div class="status-dot ${a.online ? 'online' : 'offline'}"></div>
+            </div>
+            <div class="agent-info">
+                <div class="agent-name">${esc(a.name)}</div>
+                <div class="agent-status-text">${a.online ? 'Online' : 'Offline'}</div>
+            </div>
+            ${a.messageCount > 0 ? `<div class="badge">${a.messageCount}</div>` : ''}
+        </li>
+    `).join('');
 }
 
-// ── Select Agent ──
+// ── SELECT AGENT ────────────────────────────────────────────
 async function selectAgent(id) {
-  activeId = id;
-  const agent = agents.find(a => a.id === id);
-  if (!agent) return;
+    activeId = id;
+    const agent = agents.find(a => a.id === id);
+    if (!agent) return;
 
-  renderSidebar();
+    renderSidebar();
+    document.getElementById('headerActions').style.display = 'flex';
+    document.getElementById('headerInfo').innerHTML = `
+        <h2>${esc(agent.name)} <span class="host-badge">${esc(agent.host)}:${agent.port || 18789}</span></h2>
+    `;
 
-  const area = document.getElementById('chat-area');
-  area.innerHTML = `
-    <div class="chat-header">
-      <div class="agent-dot" style="background:${agent.color};width:32px;height:32px;font-size:14px">${esc(agent.name.charAt(0).toUpperCase())}</div>
-      <div>
-        <div class="chat-header-name">${esc(agent.name)}</div>
-        <div class="chat-header-host">${esc(agent.host)}:${agent.port || 18789}</div>
-      </div>
-      <div class="chat-header-actions">
-        <button class="chat-btn" onclick="openModal('${agent.id}')">Rename</button>
-        <button class="chat-btn" onclick="clearChat('${agent.id}')">Clear</button>
-      </div>
-    </div>
-    <div class="chat-messages" id="messages">
-      <div class="chat-welcome">
-        <h2>${esc(agent.name)}</h2>
-        <p>${agent.online ? 'Connected to OpenClaw Gateway. Send a message to start.' : 'Agent is offline. Check VPS connection.'}</p>
-      </div>
-    </div>
-    <div class="input-bar">
-      <textarea class="input-field" id="input" placeholder="Message ${esc(agent.name)}..." rows="1" onkeydown="handleKey(event)"></textarea>
-      <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
-    </div>
-  `;
+    const area = document.getElementById('messagesArea');
+    area.innerHTML = '';
 
-  // Load existing conversation
-  try {
-    const data = await (await fetch(`/api/agents/${id}/conversation`)).json();
-    if (data.messages && data.messages.length > 0) {
-      const msgs = document.getElementById('messages');
-      msgs.innerHTML = data.messages.map(m => `<div class="msg ${m.role}">${esc(m.content)}</div>`).join('');
-      msgs.scrollTop = msgs.scrollHeight;
+    try {
+        const data = await (await fetch(`/api/agents/${id}/conversation`)).json();
+        if (data.messages && data.messages.length > 0) {
+            data.messages.forEach(m => appendMsg(m.role, m.content));
+        } else {
+            area.innerHTML = `<div class="welcome-state"><h2>${esc(agent.name)}</h2><p>${agent.online ? 'Connected to OpenClaw Gateway. Send a message to start.' : 'Agent is offline. Check VPS connection.'}</p></div>`;
+        }
+    } catch {
+        area.innerHTML = '<div class="welcome-state"><p>Could not load conversation.</p></div>';
     }
-  } catch {}
 
-  document.getElementById('input').focus();
+    document.getElementById('chatInput').focus();
 }
 
-// ── Chat ──
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+function appendMsg(role, text, time) {
+    const area = document.getElementById('messagesArea');
+    const welcome = area.querySelector('.welcome-state');
+    if (welcome) welcome.remove();
+
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+    div.innerHTML = `<div class="msg-bubble">${esc(text)}</div><div class="msg-time">${time || getTime()}</div>`;
+    area.appendChild(div);
+    area.scrollTop = area.scrollHeight;
 }
 
+// ── CHAT ────────────────────────────────────────────────────
 async function sendMessage() {
-  const input = document.getElementById('input');
-  const btn = document.getElementById('send-btn');
-  const msgs = document.getElementById('messages');
-  const message = input.value.trim();
-  if (!message || !activeId) return;
+    const input = document.getElementById('chatInput');
+    const btn = document.getElementById('sendBtn');
+    const text = input.value.trim();
+    if (!text || !activeId) return;
 
-  // Clear welcome
-  const welcome = msgs.querySelector('.chat-welcome');
-  if (welcome) welcome.remove();
+    input.value = '';
+    appendMsg('user', text);
 
-  // User message
-  const userEl = document.createElement('div');
-  userEl.className = 'msg user';
-  userEl.textContent = message;
-  msgs.appendChild(userEl);
+    const indicator = document.getElementById('typingIndicator');
+    indicator.classList.add('visible');
+    btn.disabled = true;
 
-  // Loading
-  const loadEl = document.createElement('div');
-  loadEl.className = 'msg loading';
-  loadEl.innerHTML = 'Thinking<span class="dots"></span>';
-  msgs.appendChild(loadEl);
+    try {
+        const res = await fetch(`/api/agents/${activeId}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text }),
+        });
+        const data = await res.json();
 
-  input.value = '';
-  btn.disabled = true;
-  msgs.scrollTop = msgs.scrollHeight;
+        indicator.classList.remove('visible');
 
-  try {
-    const res = await fetch(`/api/agents/${activeId}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
-    });
-    const data = await res.json();
-    loadEl.remove();
-
-    if (data.error) {
-      const errEl = document.createElement('div');
-      errEl.className = 'msg error';
-      errEl.textContent = data.error;
-      msgs.appendChild(errEl);
-    } else {
-      const aEl = document.createElement('div');
-      aEl.className = 'msg assistant';
-      aEl.textContent = data.response;
-      msgs.appendChild(aEl);
+        if (data.error) {
+            appendMsg('error', data.error);
+        } else {
+            appendMsg('assistant', data.response);
+        }
+    } catch {
+        indicator.classList.remove('visible');
+        appendMsg('error', 'Failed to reach agent');
     }
-  } catch {
-    loadEl.remove();
-    const errEl = document.createElement('div');
-    errEl.className = 'msg error';
-    errEl.textContent = 'Failed to reach agent';
-    msgs.appendChild(errEl);
-  }
 
-  btn.disabled = false;
-  msgs.scrollTop = msgs.scrollHeight;
-  input.focus();
+    btn.disabled = false;
+    input.focus();
 
-  // Update sidebar count
-  const agent = agents.find(a => a.id === activeId);
-  if (agent) agent.messageCount = (agent.messageCount || 0) + 2;
-  renderSidebar();
+    const agent = agents.find(a => a.id === activeId);
+    if (agent) agent.messageCount = (agent.messageCount || 0) + 2;
+    renderSidebar();
 }
 
-async function clearChat(id) {
-  await fetch(`/api/agents/${id}/clear`, { method: 'POST' });
-  const agent = agents.find(a => a.id === id);
-  if (agent) agent.messageCount = 0;
-  selectAgent(id);
+document.getElementById('sendBtn').addEventListener('click', sendMessage);
+document.getElementById('chatInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+// ── CLEAR ───────────────────────────────────────────────────
+async function clearChat() {
+    if (!activeId) return;
+    await fetch(`/api/agents/${activeId}/clear`, { method: 'POST' });
+    const agent = agents.find(a => a.id === activeId);
+    if (agent) agent.messageCount = 0;
+    selectAgent(activeId);
 }
 
-// ── Modal ──
-function openModal(id) {
-  const agent = agents.find(a => a.id === id);
-  if (!agent) return;
-  document.getElementById('modal-id').value = id;
-  document.getElementById('modal-name').value = agent.name;
-  document.getElementById('modal').classList.add('open');
-  document.getElementById('modal-name').focus();
+// ── RENAME ──────────────────────────────────────────────────
+function openRenameModal() {
+    const agent = agents.find(a => a.id === activeId);
+    if (!agent) return;
+    document.getElementById('renameInput').value = agent.name;
+    document.getElementById('renameModal').classList.add('open');
+    setTimeout(() => document.getElementById('renameInput').focus(), 100);
+}
+function closeRenameModal() { document.getElementById('renameModal').classList.remove('open'); }
+
+async function confirmRename() {
+    const name = document.getElementById('renameInput').value.trim();
+    if (!name || !activeId) return;
+    await fetch(`/api/agents/${activeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+    });
+    closeRenameModal();
+    await loadAgents();
+    selectAgent(activeId);
 }
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRenameModal(); });
 
-async function saveModal() {
-  const id = document.getElementById('modal-id').value;
-  const name = document.getElementById('modal-name').value.trim();
-  if (!name) return;
-
-  await fetch(`/api/agents/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
-  });
-
-  closeModal();
-  await loadAgents();
-  if (activeId === id) selectAgent(id);
-}
-
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-// ── Init ──
-loadAgents();
+// ── INIT ────────────────────────────────────────────────────
+if (sessionStorage.getItem('oc-auth') === '1') loadAgents();
 setInterval(loadAgents, 30000);
 </script>
 </body>
