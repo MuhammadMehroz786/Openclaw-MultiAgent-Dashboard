@@ -562,7 +562,7 @@ function appendMsg(role, text, time) {
     area.scrollTop = area.scrollHeight;
 }
 
-// ── CHAT ────────────────────────────────────────────────────
+// ── CHAT (streaming) ────────────────────────────────────────
 async function sendMessage() {
     const input = document.getElementById('chatInput');
     const btn = document.getElementById('sendBtn');
@@ -577,19 +577,60 @@ async function sendMessage() {
     btn.disabled = true;
 
     try {
-        const res = await fetch(`/api/agents/${activeId}/chat`, {
+        const res = await fetch(`/api/agents/${activeId}/chat/stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: text }),
         });
-        const data = await res.json();
 
         indicator.classList.remove('visible');
 
-        if (data.error) {
-            appendMsg('error', data.error);
+        if (!res.ok) {
+            const data = await res.json();
+            appendMsg('error', data.error || 'Request failed');
         } else {
-            appendMsg('assistant', data.response);
+            // Create assistant message bubble for streaming
+            const area = document.getElementById('messagesArea');
+            const welcome = area.querySelector('.welcome-state');
+            if (welcome) welcome.remove();
+
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            div.innerHTML = `<div class="msg-bubble"></div><div class="msg-time">${getTime()}</div>`;
+            area.appendChild(div);
+            const bubble = div.querySelector('.msg-bubble');
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = '';
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6).trim();
+                        if (data === '[DONE]') continue;
+                        try {
+                            const parsed = JSON.parse(data);
+                            const delta = parsed.choices?.[0]?.delta?.content || '';
+                            if (delta) {
+                                fullText += delta;
+                                bubble.textContent = fullText;
+                                area.scrollTop = area.scrollHeight;
+                            }
+                        } catch {}
+                    }
+                }
+            }
+
+            if (!fullText) bubble.textContent = 'No response';
         }
     } catch {
         indicator.classList.remove('visible');

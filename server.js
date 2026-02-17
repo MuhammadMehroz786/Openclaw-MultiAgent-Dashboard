@@ -42,7 +42,7 @@ function readBody(req) {
   });
 }
 
-// Call OpenClaw Gateway's OpenAI-compatible API
+// Call OpenClaw Gateway's OpenAI-compatible API (non-streaming)
 function callGateway(agent, messages) {
   const payload = JSON.stringify({
     messages: messages,
@@ -83,6 +83,47 @@ function callGateway(agent, messages) {
     req.write(payload);
     req.end();
   });
+}
+
+// Stream from OpenClaw Gateway (SSE passthrough)
+function streamGateway(agent, messages, clientRes) {
+  const payload = JSON.stringify({
+    messages: messages,
+    stream: true,
+  });
+
+  const options = {
+    hostname: agent.host,
+    port: agent.port || 18789,
+    path: '/v1/chat/completions',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${agent.token}`,
+      'Content-Length': Buffer.byteLength(payload),
+    },
+  };
+
+  const req = http.request(options, res => {
+    clientRes.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+    });
+    res.on('data', c => { clientRes.write(c); });
+    res.on('end', () => { clientRes.end(); });
+  });
+  req.on('error', e => {
+    clientRes.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    clientRes.end(JSON.stringify({ error: `Cannot reach ${agent.host}:${agent.port} — ${e.message}` }));
+  });
+  req.setTimeout(120000, () => {
+    req.destroy();
+    clientRes.end();
+  });
+  req.write(payload);
+  req.end();
 }
 
 // Check gateway health
@@ -145,7 +186,87 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { messages: conversations[id] || [] });
   }
 
-  // Chat with agent
+  // Chat with agent (streaming)
+  if (/^\/api\/agents\/[^/]+\/chat\/stream$/.test(p) && req.method === 'POST') {
+    const id = p.split('/')[3];
+    const agent = config.agents.find(a => a.id === id);
+    if (!agent) return json(res, 404, { error: 'Agent not found' });
+
+    try {
+      const b = await readBody(req);
+      if (!b.message) return json(res, 400, { error: 'Message required' });
+
+      if (!conversations[id]) conversations[id] = [];
+      conversations[id].push({ role: 'user', content: b.message });
+
+      // Collect full response for conversation history
+      let fullText = '';
+      const payload = JSON.stringify({ messages: conversations[id], stream: true });
+      const options = {
+        hostname: agent.host,
+        port: agent.port || 18789,
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${agent.token}`,
+          'Content-Length': Buffer.byteLength(payload),
+        },
+      };
+
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+      });
+
+      const gwReq = http.request(options, gwRes => {
+        let buffer = '';
+        gwRes.on('data', chunk => {
+          buffer += chunk.toString();
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6).trim();
+              if (data === '[DONE]') {
+                conversations[id].push({ role: 'assistant', content: fullText });
+                res.write('data: [DONE]\n\n');
+                res.end();
+                return;
+              }
+              try {
+                const parsed = JSON.parse(data);
+                const delta = parsed.choices?.[0]?.delta?.content || '';
+                if (delta) fullText += delta;
+              } catch {}
+              res.write(line + '\n\n');
+            }
+          }
+        });
+        gwRes.on('end', () => {
+          if (fullText && !conversations[id].find(m => m.content === fullText && m.role === 'assistant')) {
+            conversations[id].push({ role: 'assistant', content: fullText });
+          }
+          res.end();
+        });
+      });
+
+      gwReq.on('error', e => {
+        res.write(`data: ${JSON.stringify({ error: e.message })}\n\n`);
+        res.end();
+      });
+      gwReq.setTimeout(120000, () => { gwReq.destroy(); res.end(); });
+      gwReq.write(payload);
+      gwReq.end();
+    } catch (e) {
+      json(res, 500, { error: e.message });
+    }
+    return;
+  }
+
+  // Chat with agent (non-streaming fallback)
   if (/^\/api\/agents\/[^/]+\/chat$/.test(p) && req.method === 'POST') {
     const id = p.split('/')[3];
     const agent = config.agents.find(a => a.id === id);
