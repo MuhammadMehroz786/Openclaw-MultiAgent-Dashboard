@@ -8,6 +8,14 @@
       "port": 18789,
       "token": "ba1ba00e4a2637e12402c55f573b2f0ea05123051ff63428",
       "color": "#3B82F6"
+    },
+    {
+      "id": "agent-2",
+      "name": "SEO Strategist",
+      "host": "76.13.254.149",
+      "port": 18789,
+      "token": "d442b2d9bf24601997ab6e91bd7f9082e52b8ac6397e86c4",
+      "color": "#06B6D4"
     }
   ]
 }
