@@ -19,7 +19,8 @@ function loadConfig() {
 }
 
 // ── State (persisted to disk) ────────────────────────────────────
-const CONVERSATIONS_FILE = path.join(__dirname, 'conversations.json');
+const DATA_DIR = process.env.DATA_DIR || __dirname;
+const CONVERSATIONS_FILE = path.join(DATA_DIR, 'conversations.json');
 let conversations = {};
 
 function loadConversations() {
