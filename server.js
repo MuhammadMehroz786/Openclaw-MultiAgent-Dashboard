@@ -18,9 +18,30 @@ function loadConfig() {
   }
 }
 
-// ── State ───────────────────────────────────────────────────────
-const conversations = {};
+// ── State (persisted to disk) ────────────────────────────────────
+const CONVERSATIONS_FILE = path.join(__dirname, 'conversations.json');
+let conversations = {};
 
+function loadConversations() {
+  try {
+    if (fs.existsSync(CONVERSATIONS_FILE)) {
+      conversations = JSON.parse(fs.readFileSync(CONVERSATIONS_FILE, 'utf-8'));
+    }
+  } catch (e) {
+    console.error('Could not load conversations.json:', e.message);
+    conversations = {};
+  }
+}
+
+function saveConversations() {
+  try {
+    fs.writeFileSync(CONVERSATIONS_FILE, JSON.stringify(conversations, null, 2));
+  } catch (e) {
+    console.error('Could not save conversations.json:', e.message);
+  }
+}
+
+loadConversations();
 loadConfig();
 
 // ── Helpers ─────────────────────────────────────────────────────
@@ -232,6 +253,7 @@ const server = http.createServer(async (req, res) => {
               const data = line.slice(6).trim();
               if (data === '[DONE]') {
                 conversations[id].push({ role: 'assistant', content: fullText });
+                saveConversations();
                 res.write('data: [DONE]\n\n');
                 res.end();
                 return;
@@ -249,6 +271,7 @@ const server = http.createServer(async (req, res) => {
           if (fullText && !conversations[id].find(m => m.content === fullText && m.role === 'assistant')) {
             conversations[id].push({ role: 'assistant', content: fullText });
           }
+          saveConversations();
           res.end();
         });
       });
@@ -283,6 +306,7 @@ const server = http.createServer(async (req, res) => {
       const text = response.choices?.[0]?.message?.content || 'No response';
 
       conversations[id].push({ role: 'assistant', content: text });
+      saveConversations();
 
       json(res, 200, { response: text, usage: response.usage });
     } catch (e) {
@@ -312,6 +336,7 @@ const server = http.createServer(async (req, res) => {
   if (/^\/api\/agents\/[^/]+\/clear$/.test(p) && req.method === 'POST') {
     const id = p.split('/')[3];
     conversations[id] = [];
+    saveConversations();
     return json(res, 200, { ok: true });
   }
 
